@@ -304,7 +304,17 @@ class VisionControlInstance extends InstanceBase {
 		let scenes = []
 		if (sres.ok) {
 			const data = await sres.json()
-			scenes = Array.isArray(data) ? data : []
+			// Normalize field casing: the fixed scene API (after 2.18.4) returns
+			// camelCase (itemId/path/type/active), while the documented shape and the
+			// local-files fallback use PascalCase (ItemId/Path/Type/Active). Map to
+			// PascalCase so the rest of the module reads one consistent shape.
+			const arr = Array.isArray(data) ? data : []
+			scenes = arr.map((s) => ({
+				ItemId: s.ItemId ?? s.itemId,
+				Path: s.Path ?? s.path,
+				Type: s.Type ?? s.type,
+				Active: s.Active ?? s.active,
+			}))
 			this.scenesReadError = null
 		} else {
 			// Vision Control 2.17.3 and 2.18.4: GET /Scenes responds with HTTP 500 even if
